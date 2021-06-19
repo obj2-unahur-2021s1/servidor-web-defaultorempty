@@ -74,3 +74,4 @@ class Modulo(var extensiones: MutableList<String>, var retorno: String, var tiem
     fun puedeResponder(extension: String) = extensiones.contains(extension)
 }
 
+
