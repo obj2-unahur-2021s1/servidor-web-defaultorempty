@@ -43,7 +43,7 @@ class ServidorWebTest : DescribeSpec({
 
     describe("Servidor Web") {
         var servidor = WebServer()
-        var moduloImagenes = Modulo(mutableListOf("jpg", "png", "gif"),"Retorno modulo Imagenes", 22)
+        var moduloImagenes = Modulo(mutableListOf("jpg", "png", "gif"), "Retorno modulo Imagenes", 22)
 
         servidor.modulos.add(moduloImagenes)
 
