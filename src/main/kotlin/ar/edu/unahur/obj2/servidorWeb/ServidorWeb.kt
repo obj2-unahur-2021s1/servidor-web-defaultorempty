@@ -64,27 +64,13 @@ class WebServer() {
     }
 }
 
-abstract class Modulo {
-    var extensiones = mutableListOf<String>()
 
-    abstract fun procesarPedido(pedido: Pedido): Respuesta
-}
+class Modulo(var extensiones: MutableList<String>, var retorno: String, var tiempo: Int) {
 
-class ModuloTexto() : Modulo() {
-    override fun procesarPedido(pedido: Pedido): Respuesta {
-        return Respuesta(CodigoHttp.OK, "Yo respondo texto", 55, pedido)
+    fun procesarPedido(pedido: Pedido): Respuesta {
+        return Respuesta(CodigoHttp.OK, retorno, tiempo, pedido)
     }
 
+    fun puedeResponder(extension: String) = extensiones.contains(extension)
 }
 
-class ModuloImagen() : Modulo() {
-    override fun procesarPedido(pedido: Pedido): Respuesta {
-        return Respuesta(CodigoHttp.OK, "Yo respondo Imagen", 65, pedido)
-    }
-}
-
-class ModuloVideo() : Modulo() {
-    override fun procesarPedido(pedido: Pedido): Respuesta {
-        return Respuesta(CodigoHttp.OK, "Yo respondo Video", 75, pedido)
-    }
-}
