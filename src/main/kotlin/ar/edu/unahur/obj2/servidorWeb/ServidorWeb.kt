@@ -20,6 +20,7 @@ class Respuesta(val codigo: CodigoHttp, val body: String, val tiempo: Int, val p
 class WebServer() {
 
     var modulos = mutableListOf<Modulo>()
+    var analizadores = mutableListOf<Analizador>()
 
     fun procesarPeticion(pedido: Pedido): Respuesta {
 
@@ -45,9 +46,11 @@ class WebServer() {
     }
 
     fun procesarPeticionConModulo(pedido: Pedido): Respuesta {
-        return if (existeModulo(evaluarExtension(pedido)))
-            obtenerModuloDeProcesamiento(evaluarExtension(pedido)).procesarPedido(pedido)
-        else
+        return if (existeModulo(evaluarExtension(pedido))) {
+            var respuesta = obtenerModuloDeProcesamiento(evaluarExtension(pedido)).procesarPedido(pedido)
+            ejecutarAnalizador(respuesta, obtenerModuloDeProcesamiento(evaluarExtension(pedido)))
+            respuesta
+        } else
             Respuesta(CodigoHttp.NOT_FOUND, "", 10, pedido)
     }
 
@@ -61,6 +64,12 @@ class WebServer() {
 
     fun evaluarRuta(pedido: Pedido): String {
         return URL(pedido.url).path
+    }
+
+    fun ejecutarAnalizador(respuesta: Respuesta, modulo: Modulo) {
+        analizadores.forEach {
+            it.procesar(respuesta, modulo)
+        }
     }
 }
 
