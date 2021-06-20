@@ -5,8 +5,14 @@ import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.net.URL
+import java.time.Month
 
 class ServidorWebTest : DescribeSpec({
+
+    var servidor = WebServer()
+    var moduloWeb = Modulo(mutableListOf("html", "cshtml"), "modulo de sitios", 15)
+    servidor.modulos.add(moduloWeb)
+
     describe("Un servidor web") {
         var servidor = WebServer()
 
@@ -42,7 +48,7 @@ class ServidorWebTest : DescribeSpec({
     }
 
     describe("Servidor Web") {
-        var servidor = WebServer()
+
         var moduloImagenes = Modulo(mutableListOf("jpg", "png", "gif"), "Retorno modulo Imagenes", 22)
 
         servidor.modulos.add(moduloImagenes)
@@ -54,7 +60,7 @@ class ServidorWebTest : DescribeSpec({
             }
 
             it("formato no valido") {
-                var pedido = Pedido("120.234.56.678", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+                var pedido = Pedido("120.234.56.678", "http://pepito.com.ar/documentos/doc1.xhtml", LocalDateTime.now())
                 servidor.procesarPeticion(pedido).codigo.shouldBe(CodigoHttp.NOT_FOUND)
             }
 
@@ -64,4 +70,67 @@ class ServidorWebTest : DescribeSpec({
             }
         }
     }
+
+    describe("Analizador de estadisticas") {
+
+        it("analizador de estadisticas cantidadDeRespuestasPorStrinEnBody") {
+
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var estadisticas = AnalizadorEstadisticas()
+
+            servidor.analizadores.add(estadisticas)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            estadisticas.cantidadDeRespuestasPorStringEnBody("sitios").shouldBe(2)
+        }
+
+        it("analizador de estadisticas porcentajeDePedidosConRespuestaExitoso") {
+
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var estadisticas = AnalizadorEstadisticas()
+
+            servidor.analizadores.add(estadisticas)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            estadisticas.porcentajeDePedidosConRespuestaExitoso().shouldBe(100)
+        }
+
+        it("analizador de estadisticas tiempoDeRespuestaPromedio") {
+
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var estadisticas = AnalizadorEstadisticas()
+
+            servidor.analizadores.add(estadisticas)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            estadisticas.tiempoDeRespuestaPromedio().shouldBe(15)
+        }
+
+        it("analizador de estadisticas cantidadDePedidosEntreDosMomentos") {
+            var pedido = Pedido(
+                "192.168.1.1",
+                "http://pepito.com.ar/documentos/doc1.html",
+                LocalDateTime.of(2021, Month.JUNE, 15, 3, 15)
+            )
+            var pedido2 = Pedido(
+                "192.168.1.1",
+                "http://pepito.com.ar/documentos/doc1.html",
+                LocalDateTime.of(2021, Month.JUNE, 20, 3, 15)
+            )
+            var estadisticas = AnalizadorEstadisticas()
+
+            servidor.analizadores.add(estadisticas)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            estadisticas.cantidadDePedidosEntreDosMomentos(
+                LocalDateTime.of(2021, Month.JUNE, 14, 3, 15),
+                LocalDateTime.of(2021, Month.JUNE, 21, 3, 15)
+            ).shouldBe(2)
+        }
+    }
+
+
 })
