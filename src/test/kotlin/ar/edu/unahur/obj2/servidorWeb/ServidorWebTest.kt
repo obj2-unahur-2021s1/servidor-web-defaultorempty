@@ -154,5 +154,27 @@ class ServidorWebTest : DescribeSpec({
             servidor.procesarPeticion(pedido2)
             ipSospechosa.cantidadDePedidosPorIp("192.168.1.1").shouldBe(0)
         }
+
+        it("Analizador IP sospechosa cantidadDePedidosPorIp ") {
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var ipSospechosa = AnalizadorIpsSospechosa()
+            ipSospechosa.ipsSospechosas.add("192.168.9.9")
+            servidor.analizadores.add(ipSospechosa)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            ipSospechosa.cantidadDePedidosPorIp("192.168.1.1").shouldBe(0)
+        }
+
+        it("Analizador IP sospechosa conjuntoDeIpsPorRuta ") {
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var ipSospechosa = AnalizadorIpsSospechosa()
+            ipSospechosa.ipsSospechosas.add("192.168.1.1")
+            servidor.analizadores.add(ipSospechosa)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            ipSospechosa.conjuntoDeIpsPorRuta("/documentos/doc1.html").count().shouldBe(2)
+        }
     }
 })
