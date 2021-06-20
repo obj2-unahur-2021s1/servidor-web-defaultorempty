@@ -28,7 +28,6 @@ class ServidorWebTest : DescribeSpec({
             servidor.procesarPeticionSinModulos(pedido).codigo.shouldBe(CodigoHttp.NOT_IMPLEMENTED)
         }
     }
-
     describe("probar URL") {
         it("Probar HTTP") {
             URL("http://pepito.com.ar/documentos/doc1.html").protocol.shouldBe("http")
@@ -46,7 +45,6 @@ class ServidorWebTest : DescribeSpec({
             URL("http://pepito.com.ar/documentos/doc1.html").host.shouldBe("pepito.com.ar")
         }
     }
-
     describe("Servidor Web") {
 
         var moduloImagenes = Modulo(mutableListOf("jpg", "png", "gif"), "Retorno modulo Imagenes", 22)
@@ -70,7 +68,74 @@ class ServidorWebTest : DescribeSpec({
             }
         }
     }
+    describe("Analizador de demora") {
 
+        it("Analizador de demora cantidadDeRespuestasDemoradasPorModulo") {
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var analizadorDeDemora = AnalizadorDeteccionDeDemora(demoraMinima = 1)
+            servidor.analizadores.add(analizadorDeDemora)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            analizadorDeDemora.cantidadDeRespuestasDemoradasPorModulo(moduloWeb).shouldBe(2)
+        }
+    }
+    describe("Analizador de IP Sospechosa") {
+        it("Analizador IP sospechosa cantidadDePedidosPorIp ok ") {
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var ipSospechosa = AnalizadorIpsSospechosa()
+            ipSospechosa.ipsSospechosas.add("192.168.1.1")
+            servidor.analizadores.add(ipSospechosa)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            ipSospechosa.cantidadDePedidosPorIp("192.168.1.1").shouldBe(2)
+        }
+
+        it("Analizador IP sospechosa cantidadDePedidosPorIp  por no ") {
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var ipSospechosa = AnalizadorIpsSospechosa()
+            ipSospechosa.ipsSospechosas.add("192.168.9.9")
+            servidor.analizadores.add(ipSospechosa)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            ipSospechosa.cantidadDePedidosPorIp("192.168.1.1").shouldBe(0)
+        }
+
+        it("Analizador IP sospechosa cantidadDePedidosPorIp ") {
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var ipSospechosa = AnalizadorIpsSospechosa()
+            ipSospechosa.ipsSospechosas.add("192.168.9.9")
+            servidor.analizadores.add(ipSospechosa)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            ipSospechosa.cantidadDePedidosPorIp("192.168.1.1").shouldBe(0)
+        }
+
+        it("Analizador IP sospechosa conjuntoDeIpsPorRuta ") {
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var ipSospechosa = AnalizadorIpsSospechosa()
+            ipSospechosa.ipsSospechosas.add("192.168.1.1")
+            servidor.analizadores.add(ipSospechosa)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            ipSospechosa.conjuntoDeIpsPorRuta("/documentos/doc1.html").count().shouldBe(2)
+        }
+
+        it("Analizador IP sospechosa Modulo mas consultado ") {
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var ipSospechosa = AnalizadorIpsSospechosa()
+            ipSospechosa.ipsSospechosas.add("192.168.1.1")
+            servidor.analizadores.add(ipSospechosa)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            ipSospechosa.moduloMasConsultado().shouldBe(moduloWeb)
+        }
+    }
     describe("Analizador de estadisticas") {
 
         it("analizador de estadisticas cantidadDeRespuestasPorStrinEnBody") {
@@ -129,63 +194,6 @@ class ServidorWebTest : DescribeSpec({
                 LocalDateTime.of(2021, Month.JUNE, 14, 3, 15),
                 LocalDateTime.of(2021, Month.JUNE, 21, 3, 15)
             ).shouldBe(2)
-        }
-    }
-
-    describe("Analizador de IP Sospechosa") {
-        it("Analizador IP sospechosa cantidadDePedidosPorIp ok ") {
-            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var ipSospechosa = AnalizadorIpsSospechosa()
-            ipSospechosa.ipsSospechosas.add("192.168.1.1")
-            servidor.analizadores.add(ipSospechosa)
-            servidor.procesarPeticion(pedido)
-            servidor.procesarPeticion(pedido2)
-            ipSospechosa.cantidadDePedidosPorIp("192.168.1.1").shouldBe(2)
-        }
-
-        it("Analizador IP sospechosa cantidadDePedidosPorIp  por no ") {
-            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var ipSospechosa = AnalizadorIpsSospechosa()
-            ipSospechosa.ipsSospechosas.add("192.168.9.9")
-            servidor.analizadores.add(ipSospechosa)
-            servidor.procesarPeticion(pedido)
-            servidor.procesarPeticion(pedido2)
-            ipSospechosa.cantidadDePedidosPorIp("192.168.1.1").shouldBe(0)
-        }
-
-        it("Analizador IP sospechosa cantidadDePedidosPorIp ") {
-            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var ipSospechosa = AnalizadorIpsSospechosa()
-            ipSospechosa.ipsSospechosas.add("192.168.9.9")
-            servidor.analizadores.add(ipSospechosa)
-            servidor.procesarPeticion(pedido)
-            servidor.procesarPeticion(pedido2)
-            ipSospechosa.cantidadDePedidosPorIp("192.168.1.1").shouldBe(0)
-        }
-
-        it("Analizador IP sospechosa conjuntoDeIpsPorRuta ") {
-            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var ipSospechosa = AnalizadorIpsSospechosa()
-            ipSospechosa.ipsSospechosas.add("192.168.1.1")
-            servidor.analizadores.add(ipSospechosa)
-            servidor.procesarPeticion(pedido)
-            servidor.procesarPeticion(pedido2)
-            ipSospechosa.conjuntoDeIpsPorRuta("/documentos/doc1.html").count().shouldBe(2)
-        }
-
-        it("Analizador IP sospechosa Modulo mas consultado ") {
-            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
-            var ipSospechosa = AnalizadorIpsSospechosa()
-            ipSospechosa.ipsSospechosas.add("192.168.1.1")
-            servidor.analizadores.add(ipSospechosa)
-            servidor.procesarPeticion(pedido)
-            servidor.procesarPeticion(pedido2)
-            ipSospechosa.moduloMasConsultado().shouldBe(moduloWeb)
         }
     }
 })
