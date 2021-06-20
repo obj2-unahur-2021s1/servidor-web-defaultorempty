@@ -176,5 +176,16 @@ class ServidorWebTest : DescribeSpec({
             servidor.procesarPeticion(pedido2)
             ipSospechosa.conjuntoDeIpsPorRuta("/documentos/doc1.html").count().shouldBe(2)
         }
+
+        it("Analizador IP sospechosa Modulo mas consultado ") {
+            var pedido = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var pedido2 = Pedido("192.168.1.1", "http://pepito.com.ar/documentos/doc1.html", LocalDateTime.now())
+            var ipSospechosa = AnalizadorIpsSospechosa()
+            ipSospechosa.ipsSospechosas.add("192.168.1.1")
+            servidor.analizadores.add(ipSospechosa)
+            servidor.procesarPeticion(pedido)
+            servidor.procesarPeticion(pedido2)
+            ipSospechosa.moduloMasConsultado().shouldBe(moduloWeb)
+        }
     }
 })
